@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Mock Interview</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: #f4f7f6; display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar Styles */
+        .sidebar { width: 250px; background: #2c3e50; color: white; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-header h2 { font-size: 20px; color: #00c6ff; }
+        .nav-links { list-style: none; padding: 20px 0; flex-grow: 1; }
+        .nav-links li { padding: 10px 20px; margin: 5px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .nav-links li.active, .nav-links li:hover { background: #00c6ff; color: #000; }
+        .nav-links li a { color: inherit; text-decoration: none; display: flex; align-items: center; }
+        .nav-links li i { margin-right: 15px; width: 20px; }
+        .logout-btn { margin: 20px; padding: 12px; background: #e74c3c; color: white; text-align: center; border-radius: 8px; text-decoration: none; font-weight: bold; }
+
+        /* Main Chat Area */
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; padding: 20px; position: relative; }
+        .chat-container { flex-grow: 1; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; border: 2px solid #eee; }
+        .chat-header { background: #2c3e50; color: white; padding: 15px 20px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        
+        .chat-box { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: #fafbfc; }
+        .msg { max-width: 80%; padding: 12px 18px; border-radius: 15px; font-size: 15px; line-height: 1.5; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .ai-msg { align-self: flex-start; background: #ffffff; color: #333; border-bottom-left-radius: 2px; border: 1px solid #ddd; }
+        .user-msg { align-self: flex-end; background: #00c6ff; color: #000; font-weight: 500; border-bottom-right-radius: 2px; }
+
+        .chat-input-area { padding: 20px; background: white; border-top: 1px solid #eee; display: flex; gap: 10px; }
+        input[type="text"] { flex-grow: 1; padding: 12px 15px; border: 2px solid #ddd; border-radius: 8px; outline: none; font-size: 15px; }
+        input[type="text"]:focus { border-color: #00c6ff; }
+        button { padding: 12px 25px; background: #2c3e50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #1a252f; }
+        
+        /* Role Selection Popup Overlay */
+        #role-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(5px); }
+        .role-box { background: white; padding: 40px; border-radius: 15px; text-align: center; width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-top: 5px solid #00c6ff; }
+        .role-box h3 { color: #2c3e50; font-size: 24px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>AI Platform</h2>
+            <span style="font-size: 12px; color: #bdc3c7;">Your Personal Tutor</span>
+        </div>
+      <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="roadmap.html"><i class="fas fa-map-signs"></i> AI Roadmaps</a></li>
+            <li><a href="quiz.html"><i class="fas fa-brain"></i> Quiz & Test</a></li>
+            <li class="active"><a href="interview.html"><i class="fas fa-video"></i> Mock Interview</a></li>
+           <li><a href="resources.html"><i class="fas fa-book"></i> Resources</a></li>
+        </ul>
+        <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+
+    <div class="main-content">
+        <div id="role-overlay">
+            <div class="role-box">
+                <h3>Ready for Interview? 🎙️</h3>
+                <p style="color: #666; margin-bottom: 20px;">Enter the Job Role you want to practice for:</p>
+                <input type="text" id="jobRole" placeholder="e.g. Java Developer, Data Analyst..." style="width:100%; margin-bottom: 20px; border-color: #00c6ff;">
+                <button onclick="startInterview()" style="width:100%; background: #00c6ff; color: #000; font-size: 16px;">Start Mock Interview</button>
+            </div>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-header">
+                <span id="display-role"><i class="fas fa-robot"></i> AI Interviewer</span>
+                <span style="font-size: 12px; background: #e74c3c; padding: 4px 10px; border-radius: 20px; letter-spacing: 1px;"><i class="fas fa-circle" style="font-size: 8px;"></i> LIVE</span>
+            </div>
+            
+            <div class="chat-box" id="chatBox">
+                </div>
+            
+            <div class="chat-input-area">
+                <input type="text" id="userInput" placeholder="Type your answer here..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i> Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRole = "";
+
+        // 1. Start Interview when User enters Job Role
+        function startInterview() {
+            currentRole = document.getElementById('jobRole').value;
+            if(!currentRole) { 
+                alert("Please enter a job role first!"); 
+                return; 
+            }
+            
+            document.getElementById('role-overlay').style.display = 'none';
+            document.getElementById('display-role').innerHTML = `<i class="fas fa-briefcase"></i> Interviewing for: ${currentRole}`;
+            
+            // Trigger the AI to ask the first question
+            fetchAIResponse("START");
+        }
+
+        // 2. Send User Message to Chat and API
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            if(!message) return;
+
+            // Show User message on screen
+            appendMessage(message, 'user-msg');
+            input.value = ""; // clear input
+            
+            // Call AI API
+            fetchAIResponse(message);
+        }
+
+        // 3. Talk to Spring Boot API
+        async function fetchAIResponse(userText) {
+            const chatBox = document.getElementById('chatBox');
+            
+            // Temporary loading message
+            const loadingId = "load-" + Date.now();
+            appendMessage('<i class="fas fa-spinner fa-spin"></i> AI is evaluating and typing...', 'ai-msg', loadingId);
+
+            try {
+                // Call our Java Backend
+                const response = await fetch(`/api/ai/interview?role=${encodeURIComponent(currentRole)}&message=${encodeURIComponent(userText)}`);
+                const aiReply = await response.text();
+                
+                // Remove loading message and show real reply
+                document.getElementById(loadingId).remove();
+                appendMessage(aiReply, 'ai-msg');
+            } catch (error) {
+                document.getElementById(loadingId).remove();
+                appendMessage("Connection Error! Could not reach the AI.", 'ai-msg');
+            }
+        }
+
+        // 4. Helper function to show messages on screen
+        function appendMessage(text, className, id = null) {
+            const chatBox = document.getElementById('chatBox');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `msg ${className}`;
+            msgDiv.innerHTML = text; // using innerHTML to allow FontAwesome icons
+            if(id) msgDiv.id = id;
+            
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to bottom
+        }
+    </script>
+</body>
+</html>

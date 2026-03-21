@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Skill Test</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: #f4f7f6; display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 250px; background: #2c3e50; color: white; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-header h2 { font-size: 20px; color: #00c6ff; }
+        .nav-links { list-style: none; padding: 20px 0; flex-grow: 1; }
+        .nav-links li { padding: 10px 20px; margin: 5px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s;}
+        .nav-links li.active, .nav-links li:hover { background: #00c6ff; color: #000; }
+        .nav-links li a { color: inherit; text-decoration: none; display: flex; align-items: center; }
+        .nav-links li i { margin-right: 15px; width: 20px; }
+        .logout-btn { margin: 20px; padding: 12px; background: #e74c3c; color: white; text-align: center; border-radius: 8px; text-decoration: none; }
+
+        /* Main Content */
+        .main-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
+        .header-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; border-top: 5px solid #9b59b6; }
+        .header-card h2 { color: #2c3e50; margin-bottom: 15px; }
+        
+        /* Input Box */
+        .search-box { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .search-box input { width: 50%; padding: 12px 20px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
+        .search-box input:focus { border-color: #9b59b6; }
+        .search-box button { padding: 12px 25px; background: #9b59b6; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        .search-box button:hover { background: #8e44ad; }
+
+        /* Quiz Area */
+        #loading { display: none; text-align: center; font-size: 18px; color: #9b59b6; font-weight: bold; margin-top: 20px; }
+        #quiz-container { display: none; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .question-block { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        .question-block h3 { color: #2c3e50; font-size: 18px; margin-bottom: 10px; }
+        .options label { display: block; background: #f8f9fa; padding: 10px 15px; margin-bottom: 8px; border-radius: 5px; cursor: pointer; border: 1px solid #ddd; transition: 0.2s; }
+        .options label:hover { background: #e9ecef; }
+        .options input[type="radio"] { margin-right: 10px; }
+        
+        .submit-btn { padding: 12px 25px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 20px; display: none;}
+        .submit-btn:hover { background: #2ecc71; }
+        
+        .result-msg { margin-top: 10px; font-weight: bold; padding: 10px; border-radius: 5px; display: none; }
+        .correct { background: #d4edda; color: #155724; }
+        .wrong { background: #f8d7da; color: #721c24; }
+        .explanation { font-size: 14px; color: #555; margin-top: 5px; font-style: italic; }
+        
+        #final-score { text-align: center; font-size: 24px; color: #2c3e50; margin-top: 20px; display: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header"><h2>AI Platform</h2></div>
+       <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="roadmap.html"><i class="fas fa-map-signs"></i> AI Roadmaps</a></li>
+            <li class="active"><a href="quiz.html"><i class="fas fa-brain"></i> Quiz & Test</a></li>
+            <li><a href="interview.html"><i class="fas fa-video"></i> Mock Interview</a></li>
+            <li><a href="resources.html"><i class="fas fa-book"></i> Resources</a></li>
+        </ul>
+        <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header-card">
+            <h2>Take an AI Skill Test 🧠</h2>
+            <p style="color: #7f8c8d; margin-bottom: 20px;">Enter any topic to generate a 5-question dynamic quiz.</p>
+            <div class="search-box">
+                <input type="text" id="topicInput" placeholder="e.g., HTML, SQL, Machine Learning...">
+                <button onclick="generateQuiz()">Generate Quiz</button>
+            </div>
+        </div>
+
+        <div id="loading"><i class="fas fa-spinner fa-spin"></i> AI is thinking... Crafting questions...</div>
+        <div id="quiz-container">
+            <div id="questions-area"></div>
+            <button class="submit-btn" id="submit-btn" onclick="evaluateQuiz()">Submit Answers</button>
+            <div id="final-score"></div>
+        </div>
+    </div>
+
+    <script>
+        let quizData = [];
+        let currentTopic = "";
+
+        async function generateQuiz() {
+            currentTopic = document.getElementById('topicInput').value;
+            if(!currentTopic) { alert("Please enter a topic!"); return; }
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('quiz-container').style.display = 'none';
+            document.getElementById('final-score').style.display = 'none';
+            document.getElementById('questions-area').innerHTML = '';
+
+            try {
+                const response = await fetch(`/api/ai/quiz?topic=${currentTopic}`);
+                let rawText = await response.text();
+                
+                const startIndex = rawText.indexOf('[');
+                const endIndex = rawText.lastIndexOf(']');
+                if (startIndex !== -1 && endIndex !== -1) {
+                    rawText = rawText.substring(startIndex, endIndex + 1);
+                }
+                
+                quizData = JSON.parse(rawText);
+                renderQuiz();
+            } catch (error) {
+                alert("Oops! AI couldn't format the quiz properly. Please click 'Generate Quiz' again!");
+                console.error(error);
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function renderQuiz() {
+            const container = document.getElementById('questions-area');
+            let html = '';
+
+            quizData.forEach((q, index) => {
+                if (!q.options || !Array.isArray(q.options)) return; 
+
+                html += `
+                <div class="question-block" id="qblock-${index}">
+                    <h3>Q${index + 1}: ${q.question}</h3>
+                    <div class="options">
+                        ${q.options.map((opt, i) => `
+                            <label>
+                                <input type="radio" name="q${index}" value="${opt.replace(/"/g, '&quot;')}"> 
+                                ${opt}
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div class="result-msg" id="msg-${index}"></div>
+                    <div class="explanation" id="exp-${index}" style="display:none;">💡 <b>Explanation:</b> ${q.explanation}</div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('quiz-container').style.display = 'block';
+            document.getElementById('submit-btn').style.display = 'block';
+        }
+
+        function evaluateQuiz() {
+            let score = 0;
+            
+            quizData.forEach((q, index) => {
+                const selected = document.querySelector(`input[name="q${index}"]:checked`);
+                const msgBox = document.getElementById(`msg-${index}`);
+                const expBox = document.getElementById(`exp-${index}`);
+                
+                if(!msgBox || !expBox) return;
+
+                msgBox.style.display = 'block';
+                expBox.style.display = 'block';
+
+                if (selected && selected.value === q.answer) {
+                    score++;
+                    msgBox.className = 'result-msg correct';
+                    msgBox.innerHTML = '✅ Correct!';
+                } else {
+                    msgBox.className = 'result-msg wrong';
+                    msgBox.innerHTML = `❌ Wrong! Correct answer is: <b>${q.answer}</b>`;
+                }
+            });
+
+            document.getElementById('submit-btn').style.display = 'none';
+            const scoreBox = document.getElementById('final-score');
+            scoreBox.innerHTML = `🏆 Your Final Score: ${score} / ${quizData.length}`;
+            scoreBox.style.display = 'block';
+
+            // ஸ்கோரை டேட்டாபேஸில் சேமிக்க அனுப்பும் புதிய கோடு 👇
+            saveScoreToDatabase(score, quizData.length);
+        }
+
+        async function saveScoreToDatabase(finalScore, totalQ) {
+            const scoreData = {
+                studentName: "Naveen", // நீங்கள் விரும்பினால் இதை User Profile-ல் இருந்து எடுக்கலாம்
+                topic: currentTopic,
+                score: finalScore,
+                totalQuestions: totalQ
+            };
+
+            try {
+                const response = await fetch('/api/db/save-score', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(scoreData)
+                });
+                
+                const resultText = await response.text();
+                console.log(resultText); 
+                // வெற்றி மெசேஜை மாணவருக்குக் காட்டுகிறோம்
+                alert("Wow! Your score is securely saved in the Database! 💾🎉");
+            } catch (error) {
+                console.error("Database Error:", error);
+            }
+        }
+    </script>
+</body>
+</html>
