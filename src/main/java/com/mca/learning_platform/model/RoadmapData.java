@@ -12,7 +12,7 @@ public class RoadmapData {
     private String studentName;
     private String topic;
     
-    @Column(columnDefinition = "LONGTEXT") // Roadmap பெரிய text என்பதால் LONGTEXT
+    @Column(columnDefinition = "TEXT") // Roadmap பெரிய text என்பதால் LONGTEXT
     private String content;
 
     // Getters and Setters
